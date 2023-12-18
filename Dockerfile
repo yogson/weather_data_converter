@@ -11,5 +11,5 @@ ENV SOURCE_DIR=/data/src
 ENV OUTPUT_DIR=/data/output
 
 COPY ./src /app
-RUN rm /app/local_settings.py
-CMD ["python", "-W", "ignore", "main.py"]
+RUN rm -f /app/local_settings.py
+ENTRYPOINT ["python", "-W", "ignore", "main.py"]

@@ -1,13 +1,20 @@
+import sys
+
 from processor import WeatherDataProcessor
 from settings import TEMP_DIR, OUTPUT_DIR, SOURCE_DIR
 from utils import prepare_dir
 
 
-def main():
-    WeatherDataProcessor(source="https://opendata.dwd.de/weather/nwp/icon-d2/grib/12/tot_prec/").run()
+def main(url: str):
+    for _dir in (SOURCE_DIR, TEMP_DIR, OUTPUT_DIR):
+        prepare_dir(_dir)
+    WeatherDataProcessor(source=url).run()
 
 
 if __name__ == "__main__":
-    for _dir in (SOURCE_DIR, TEMP_DIR, OUTPUT_DIR):
-        prepare_dir(_dir)
-    main()
+    if len(sys.argv) < 2:
+        print("Error: No source URL provided.")
+        sys.exit(1)
+
+    source_url = sys.argv[1]
+    main(source_url)

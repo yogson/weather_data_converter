@@ -65,15 +65,47 @@ The `settings` module in the `WeatherDataProcessor` application configures vario
 
 ---
 
-## Usage
+## Running the Application with Docker
 
-To use `WeatherDataProcessor`, instantiate it with a source URL and call the `run` method:
+### Building the Docker Image
 
-```python
-processor = WeatherDataProcessor(source='http://example.com/data')
-processor.run()
+Before running the application, build the Docker image using the Dockerfile provided in the repository. Navigate to the directory containing the Dockerfile and run:
+
+```bash
+docker build -t weather-processor .
 ```
 
-This will start the process of downloading, processing, and transforming the weather data files as per the defined pipelines.
+This command builds the Docker image with the tag `weather-processor`. You can replace `weather-processor` with a tag of your choice.
+
+### Running the Application
+
+To run the application in a Docker container, you need to:
+
+1. **Map a Local Directory to the Container's Volume**: This allows the application to read input data from and write output data to your host machine.
+2. **Provide the Source URL as an Argument**: This is the URL where the application will fetch weather data.
+
+```bash
+docker run -v /path/to/local/dir:/data weather-processor <source_url>
+```
+
+- `/path/to/local/dir`: Replace this with the path to the directory on your host machine where you want the application to read from and write data to.
+- `<source_url>`: Replace this with the actual source URL for the weather data.
+
+### Example
+
+```bash
+docker run -v /home/user/weather_data:/data weather-processor https://opendata.dwd.de/weather/nwp/icon-d2/grib/12/tot_prec/
+```
+
+In this example:
+- `/home/user/weather_data` is the local directory on the host machine.
+- `https://opendata.dwd.de/weather/nwp/icon-d2/grib/12/tot_prec/` is the source URL for fetching weather data.
+
+This command will start a Docker container that runs the weather data processing application. The application will process data fetched from the provided URL and store the results in the specified local directory.
+
+## Notes
+
+- Ensure that the local directory you specify exists and has the necessary read/write permissions.
+- The data in the specified local directory will be accessible inside the container under `/data`.
 
 ---
