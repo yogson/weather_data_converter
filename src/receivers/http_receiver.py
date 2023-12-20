@@ -1,6 +1,6 @@
 import asyncio
-import logging
 from pathlib import Path
+from typing import AsyncGenerator
 
 import aiohttp
 from aiohttp import ClientError
@@ -30,7 +30,7 @@ async def _download_file(session: aiohttp.ClientSession, url: str) -> Path | Non
         return None
 
 
-async def receive(*args, source_url: str) -> list[Path]:
+async def receive(*args, source_url: str) -> AsyncGenerator[Path, str]:
     async with aiohttp.ClientSession() as session:
         async with session.get(source_url) as response:
             if response.status == 200:
@@ -43,5 +43,7 @@ async def receive(*args, source_url: str) -> list[Path]:
             task = asyncio.create_task(_download_file(session, full_url))
             tasks.append(task)
 
-        file_paths = await asyncio.gather(*tasks)
-        return [path for path in file_paths if path]
+        for download_task in asyncio.as_completed(tasks):
+            file_path = await download_task
+            if file_path:
+                yield file_path

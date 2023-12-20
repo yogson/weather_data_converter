@@ -1,6 +1,7 @@
 import asyncio
 from multiprocessing import Queue, Process, cpu_count
-from typing import Callable, Awaitable
+from pathlib import Path
+from typing import Callable, Awaitable, AsyncGenerator
 from uuid import uuid4
 
 from processor.task import Task, simple_worker
@@ -20,12 +21,16 @@ from transformers.loaders import write_wgf
 
 
 class WeatherDataProcessor:
-    receiver: Awaitable = receive
-    load_pipeline = [uncompress_bzip, extract_regular_grid_data, save_array_and_meta]
-    transform_pipeline = [
-        subtract_previous_hour,
+    receiver: AsyncGenerator[Path, str] = receive
+    load_pipeline = [
+        uncompress_bzip,
+        extract_regular_grid_data,
         replace_nan_with_sentinel,
         replace_grib_missing_value_with_sentinel,
+        save_array_and_meta,
+    ]
+    transform_pipeline = [
+        subtract_previous_hour,
         build_wgf,
         write_wgf,
     ]
@@ -54,9 +59,10 @@ class WeatherDataProcessor:
         return task_id
 
     async def _run(self):
-        file_paths = await self.receiver(source_url=self.source)
         task_ids = set()
-        for file_path in file_paths:
+        file_paths = []
+        async for file_path in self.receiver(source_url=self.source):
+            file_paths.append(file_path)
             context = {"source_path": file_path, "output_dir": TEMP_DIR}
             task_id = self._set_task(
                 context=context,
